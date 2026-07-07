@@ -1,0 +1,76 @@
+FILENAME = 'dictionary.txt'
+
+
+def load_dict_from_file(filename):
+    eng_to_ukr = {}
+    ukr_to_eng = {}
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            for line in f:
+                if '=' in line:
+                    # split('=', 1) ділить рядок ТІЛЬКИ по першому знаку "="
+                    # Це захищає від помилки "too many values to unpack"
+                    parts = line.split('=', 1)
+
+                    if len(parts) == 2:
+                        eng, ukr = parts
+                        eng = eng.strip().lower()
+                        ukr = ukr.strip().lower()
+
+                        eng_to_ukr[eng] = ukr
+                        ukr_to_eng[ukr] = eng
+    except FileNotFoundError:
+        print(f"Файл {filename} не знайдено, створюємо новий словник.")
+
+    return eng_to_ukr, ukr_to_eng
+
+
+def save_word(filename, eng, ukr):
+    with open(filename, 'a', encoding='utf-8') as f:
+        f.write(f'{eng} = {ukr}\n')
+
+
+# Завантажуємо словники один раз на початку роботи програми
+eng_to_ukr, ukr_to_eng = load_dict_from_file(FILENAME)
+
+print("--- Словник завантажено успішно! ---")
+
+while True:
+    # Приводимо введене слово до нижнього регістру (.lower()) для зручного пошуку
+    word = input('\nEnter your word (or type exit): ').strip().lower()
+
+    if word in ('quit', 'end', 'exit'):
+        print('папа!')
+        break
+
+    if not word:  # Якщо користувач випадково натиснув Enter порожнім
+        continue
+
+    # 1. Шукаємо в англо-українському словнику
+    if word in eng_to_ukr:
+        print(f'Translation: {eng_to_ukr[word]}')
+        continue
+
+    # 2. Шукаємо в україно-англійському словнику
+    if word in ukr_to_eng:
+        print(f'Translation: {ukr_to_eng[word]}')
+        continue
+
+    # 3. Якщо слова немає в базі
+    print('Word not found.')
+
+    answer = input('Додати переклад? (y/n): ').strip().lower()
+    if answer == 'y':
+        eng = input('Enter english word: ').strip().lower()
+        ukr = input('Enter ukrainian translation: ').strip().lower()
+
+        # Перевірка, щоб користувач не зберіг порожні рядки
+        if eng and ukr:
+            eng_to_ukr[eng] = ukr
+            ukr_to_eng[ukr] = eng
+
+            # Зберігаємо у файл (передаємо змінну FILENAME, а не рядок 'FILENAME')
+            save_word(FILENAME, eng, ukr)
+            print('Word saved.')
+        else:
+            print('Помилка: поля не можуть бути порожніми! Слово не збережено.')
